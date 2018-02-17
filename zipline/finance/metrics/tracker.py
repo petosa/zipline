@@ -306,7 +306,7 @@ class MetricsTracker(object):
             'capital_base': self._capital_base,
             'daily_perf': {
                 'period_open': self._market_open,
-                'period_close': self._market_close,
+                'period_close': dt,
             },
             'cumulative_perf': {
                 'period_open': self._first_session,

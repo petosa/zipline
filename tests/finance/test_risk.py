@@ -22,7 +22,7 @@ from zipline.utils import factory
 from zipline.finance.trading import SimulationParameters
 from zipline.testing.fixtures import WithTradingEnvironment, ZiplineTestCase
 
-from zipline.finance.metrics import ClassicRiskMetrics
+from zipline.finance.metrics import _ClassicRiskMetrics as ClassicRiskMetrics
 
 RETURNS_BASE = 0.01
 RETURNS = [RETURNS_BASE] * 251

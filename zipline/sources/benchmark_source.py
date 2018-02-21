@@ -245,8 +245,8 @@ class BenchmarkSource(object):
             return (
                 benchmark_series.pct_change()[1:],
                 self.downsample_minute_return_series(
-                    benchmark_series.iloc[1:],
                     trading_calendar,
+                    benchmark_series.iloc[1:],
                 ),
             )
 

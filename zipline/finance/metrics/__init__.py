@@ -96,12 +96,6 @@ def default_metrics():
         ReturnsStatistic(empyrical.sharpe_ratio, 'sharpe'),
         ReturnsStatistic(empyrical.sortino_ratio, 'sortino'),
 
-        ReturnsStatistic(
-            empyrical.annual_volatility,
-            'algorithm_volatility'
-        ),
-
-        ReturnsStatistic(empyrical.downside_risk),
         ReturnsStatistic(empyrical.max_drawdown),
         MaxLeverage(),
 

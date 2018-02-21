@@ -120,9 +120,7 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         all_zero_fields = [
             'algorithm_period_return',
             'benchmark_period_return',
-            'benchmark_returns',
             'capital_used',
-            'downside_risk',
             'excess_return',
             'long_exposure',
             'long_value',
@@ -148,7 +146,6 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         nan_then_zero[0] = float('nan')
         nan_then_zero_fields = (
             'algo_volatility',
-            'algorithm_volatility',
             'benchmark_volatility',
         )
         for field in nan_then_zero_fields:
@@ -610,8 +607,6 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         all_zero_fields = [
             'algorithm_period_return',
             'benchmark_period_return',
-            'benchmark_returns',
-            'downside_risk',
             'excess_return',
             'max_drawdown',
             'treasury_period_return',
@@ -675,7 +670,6 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         nan_then_zero[0] = float('nan')
         nan_then_zero_fields = (
             'algo_volatility',
-            'algorithm_volatility',
             'benchmark_volatility',
         )
         for field in nan_then_zero_fields:
@@ -784,16 +778,19 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
             check_names=False,
         )
 
-        all_nan = pd.Series(np.nan, index=self.closes)
-        all_nan_fields = (
+        all_none = pd.Series(
+            [None] * len(self.closes),
+            index=self.closes, dtype=object,
+        )
+        all_none_fields = (
             'alpha',
             'beta',
             'sortino',
         )
-        for field in all_nan_fields:
+        for field in all_none_fields:
             assert_equal(
                 perf[field],
-                all_nan,
+                all_none,
                 check_names=False,
                 msg=field,
             )
@@ -1023,8 +1020,6 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         all_zero_fields = [
             'algorithm_period_return',
             'benchmark_period_return',
-            'benchmark_returns',
-            'downside_risk',
             'excess_return',
             'max_drawdown',
             'treasury_period_return',
@@ -1080,7 +1075,6 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
         nan_then_zero[0] = float('nan')
         nan_then_zero_fields = (
             'algo_volatility',
-            'algorithm_volatility',
             'benchmark_volatility',
         )
         for field in nan_then_zero_fields:
@@ -1163,16 +1157,20 @@ class TestConstantPrice(WithConstantEquityMinuteBarData,
             check_names=False,
         )
 
-        all_nan = pd.Series(np.nan, index=self.closes)
-        all_nan_fields = (
+        all_none = pd.Series(
+            [None] * len(self.closes),
+            index=self.closes,
+            dtype=object,
+        )
+        all_none_fields = (
             'alpha',
             'beta',
             'sortino',
         )
-        for field in all_nan_fields:
+        for field in all_none_fields:
             assert_equal(
                 perf[field],
-                all_nan,
+                all_none,
                 check_names=False,
                 msg=field,
             )

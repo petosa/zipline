@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 from six import iteritems
 
-from zipline.utils.deprecate import deprecated
 from zipline.utils.exploding_object import NamedExplodingObject
 from zipline.finance._finance_ext import minute_annual_volatility
 
@@ -201,10 +200,6 @@ class BenchmarkReturnsAndVolatility(object):
         ).values
 
         if emission_rate == 'daily':
-            self._minute_returns = NamedExplodingObject(
-                'self._minute_returns',
-                'does not exist in daily emission rate',
-            )
             self._minute_cumulative_returns = NamedExplodingObject(
                 'self._minute_cumulative_returns',
                 'does not exist in daily emission rate',
@@ -217,9 +212,6 @@ class BenchmarkReturnsAndVolatility(object):
             open_ = trading_calendar.session_open(sessions[0])
             close = trading_calendar.session_close(sessions[-1])
             returns = benchmark_source.get_range(open_, close)
-            self._minute_returns = returns.groupby(pd.TimeGrouper('D')).apply(
-                lambda g: (g + 1).cumprod() - 1,
-            )
             self._minute_cumulative_returns = (
                 (1 + returns).cumprod() - 1
             )
@@ -238,15 +230,15 @@ class BenchmarkReturnsAndVolatility(object):
                    dt,
                    session_ix,
                    data_portal):
-        packet['minute_perf']['benchmark_returns'] = self._minute_returns[dt]
-
         r = self._minute_cumulative_returns[dt]
-        packet['cumulative_perf']['benchmark_returns'] = r
+        if np.isnan(r):
+            r = None
         packet['cumulative_risk_metrics']['benchmark_period_return'] = r
 
-        packet['cumulative_risk_metrics']['benchmark_volatility'] = (
-            self._minute_annual_volatility[dt]
-        )
+        v = self._minute_annual_volatility[dt]
+        if np.isnan(v):
+            v = None
+        packet['cumulative_risk_metrics']['benchmark_volatility'] = v
 
     def end_of_session(self,
                        packet,
@@ -254,17 +246,15 @@ class BenchmarkReturnsAndVolatility(object):
                        session,
                        session_ix,
                        data_portal):
-        packet['daily_perf']['benchmark_returns'] = (
-            self._daily_returns[session_ix]
-        )
-
         r = self._daily_cumulative_returns[session_ix]
-        packet['cumulative_perf']['benchmark_returns'] = r
+        if np.isnan(r):
+            r = None
         packet['cumulative_risk_metrics']['benchmark_period_return'] = r
 
-        packet['cumulative_risk_metrics']['benchmark_volatility'] = (
-            self._daily_annual_volatility[session_ix]
-        )
+        v = self._daily_annual_volatility[session_ix]
+        if np.isnan(v):
+            v = None
+        packet['cumulative_risk_metrics']['benchmark_volatility'] = v
 
 
 class PNL(object):
@@ -429,9 +419,10 @@ class ReturnsStatistic(object):
                    dt,
                    session_ix,
                    data_portal):
-        packet['cumulative_risk_metrics'][self._field_name] = self._function(
-            ledger.daily_returns_array[:session_ix + 1],
-        )
+        res = self._function(ledger.daily_returns_array[:session_ix + 1])
+        if not np.isfinite(res):
+            res = None
+        packet['cumulative_risk_metrics'][self._field_name] = res
 
     end_of_session = end_of_bar
 
@@ -457,10 +448,18 @@ class AlphaBeta(object):
                    session_ix,
                    data_portal):
         risk = packet['cumulative_risk_metrics']
-        risk['alpha'], risk['beta'] = ep.alpha_beta_aligned(
+        alpha, beta = ep.alpha_beta_aligned(
             ledger.daily_returns_array[:session_ix + 1],
             self._daily_returns_array[:session_ix + 1],
         )
+
+        if np.isnan(alpha):
+            alpha = None
+        if np.isnan(beta):
+            beta = None
+
+        risk['alpha'] = alpha
+        risk['beta'] = beta
 
     end_of_session = end_of_bar
 
@@ -660,7 +659,7 @@ class _ClassicRiskMetrics(object):
         return {
             k: (
                 None
-                if k != 'period_label' and (np.isnan(v) or np.isinf(v)) else
+                if k != 'period_label' and not np.isfinite(v) else
                 v
             )
             for k, v in iteritems(rval)

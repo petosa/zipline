@@ -610,7 +610,7 @@ class _ClassicRiskMetrics(object):
         # Benchmark needs to be masked to the same dates as the algo returns
         benchmark_returns = benchmark_returns[
             (benchmark_returns.index >= start_session) &
-            (benchmark_returns.index <= end_session)
+            (benchmark_returns.index <= algorithm_returns.index[-1])
         ]
 
         benchmark_period_returns = ep.cum_returns(benchmark_returns).iloc[-1]

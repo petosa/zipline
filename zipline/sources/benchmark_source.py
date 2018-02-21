@@ -176,17 +176,17 @@ class BenchmarkSource(object):
             )
 
     @staticmethod
-    def _daily_returns(g):
-        if g.empty:
-            return np.nan
-        else:
-            return (g[-1] - g[0]) / g[0]
+    def _compute_daily_returns(g):
+        return (g[-1] - g[0]) / g[0]
 
     @classmethod
-    def downsample_minute_return_series(cls, minutely_returns):
-        return minutely_returns.groupby(pd.TimeGrouper('D')).apply(
-            cls._daily_returns,
+    def downsample_minute_return_series(cls,
+                                        trading_calendar,
+                                        minutely_returns):
+        gb = trading_calendar.minute_index_to_session_labels(
+            minutely_returns.index,
         )
+        return minutely_returns.groupby(gb).apply(cls._compute_daily_returns)
 
     def _initialize_precalculated_series(self,
                                          asset,
@@ -244,7 +244,10 @@ class BenchmarkSource(object):
 
             return (
                 benchmark_series.pct_change()[1:],
-                self.downsample_minute_return_series(benchmark_series),
+                self.downsample_minute_return_series(
+                    benchmark_series.iloc[1:],
+                    trading_calendar,
+                ),
             )
 
         start_date = asset.start_date
@@ -263,12 +266,8 @@ class BenchmarkSource(object):
                 ffill=True
             )[asset]
 
-            return (
-                benchmark_series.pct_change()[1:],
-                benchmark_series.groupby(pd.TimeGrouper('D')).apply(
-                    self._daily_returns,
-                ),
-            )
+            returns = benchmark_series.pct_change()[1:]
+            return returns, returns
         elif start_date == trading_days[0]:
             # Attempt to handle case where stock data starts on first
             # day, in this case use the open to close return.

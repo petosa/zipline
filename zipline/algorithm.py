@@ -302,6 +302,8 @@ class TradingAlgorithm(object):
                 trading_calendar=self.trading_calendar,
             )
 
+        self.instant_fill = kwargs.pop('instant_fill', False)
+
         self.perf_tracker = None
         # Pull in the environment's new AssetFinder for quick reference
         self.asset_finder = self.trading_environment.asset_finder
@@ -586,7 +588,8 @@ class TradingAlgorithm(object):
             self._create_clock(),
             self._create_benchmark_source(),
             self.restrictions,
-            universe_func=self._calculate_universe
+            universe_func=self._calculate_universe,
+            instant_fill=self.instant_fill
         )
 
         return self.trading_client.transform()

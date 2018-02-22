@@ -64,7 +64,8 @@ def _run(handle_data,
          trading_calendar,
          print_algo,
          local_namespace,
-         environ):
+         environ,
+         instant_fill):
     """Run a backtest for the given algorithm.
 
     This is shared between the cli and :func:`zipline.run_algo`.
@@ -172,6 +173,7 @@ def _run(handle_data,
             data_frequency=data_frequency,
             trading_calendar=trading_calendar,
         ),
+        instant_fill=instant_fill,
         **{
             'initialize': initialize,
             'handle_data': handle_data,
@@ -262,7 +264,8 @@ def run_algorithm(start,
                   default_extension=True,
                   extensions=(),
                   strict_extensions=True,
-                  environ=os.environ):
+                  environ=os.environ,
+                  instant_fill=False):
     """Run a trading algorithm.
 
     Parameters
@@ -369,4 +372,5 @@ def run_algorithm(start,
         print_algo=False,
         local_namespace=False,
         environ=environ,
+        instant_fill=instant_fill,
     )

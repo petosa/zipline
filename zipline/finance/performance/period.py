@@ -353,6 +353,7 @@ class PerformancePeriod(object):
                 del self.orders_by_id[order.id]
             self.orders_by_id[order.id] = order
 
+
     def handle_execution(self, txn):
         self.cash_flow += self._calculate_execution_cash_flow(txn)
 
@@ -386,7 +387,6 @@ class PerformancePeriod(object):
         """
         if isinstance(txn.asset, Future):
             return 0.0
-
         return -1 * txn.price * txn.amount
 
     # backwards compat. TODO: remove?

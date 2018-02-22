@@ -40,7 +40,7 @@ class AlgorithmSimulator(object):
     }
 
     def __init__(self, algo, sim_params, data_portal, clock, benchmark_source,
-                 restrictions, universe_func):
+                 restrictions, universe_func, instant_fill=False):
 
         # ==============
         # Simulation
@@ -50,6 +50,7 @@ class AlgorithmSimulator(object):
         self.env = algo.trading_environment
         self.data_portal = data_portal
         self.restrictions = restrictions
+        self.instant_fill = instant_fill
 
         # ==============
         # Algo Setup
@@ -116,24 +117,27 @@ class AlgorithmSimulator(object):
 
             blotter = algo.blotter
 
-            # handle any transactions and commissions coming out new orders
-            # placed in the last bar
-            new_transactions, new_commissions, closed_orders = \
-                blotter.get_transactions(current_data)
+            def ingest_orders(blotter, current_data, perf_tracker):
+                # handle any transactions and commissions coming out new orders
+                # placed in the last bar
+                new_transactions, new_commissions, closed_orders = blotter.get_transactions(current_data)
 
-            blotter.prune_orders(closed_orders)
+                blotter.prune_orders(closed_orders)
 
-            for transaction in new_transactions:
-                perf_tracker.process_transaction(transaction)
+                for transaction in new_transactions:
 
-                # since this order was modified, record it
-                order = blotter.orders[transaction.order_id]
-                perf_tracker.process_order(order)
+                    perf_tracker.process_transaction(transaction)
 
-            if new_commissions:
-                for commission in new_commissions:
-                    perf_tracker.process_commission(commission)
+                    # since this order was modified, record it
+                    order = blotter.orders[transaction.order_id]
+                    perf_tracker.process_order(order)
 
+                if new_commissions:
+                    for commission in new_commissions:
+                        perf_tracker.process_commission(commission)
+
+            if not self.instant_fill:
+                ingest_orders(blotter, current_data, perf_tracker)
             handle_data(algo, current_data, dt_to_use)
 
             # grab any new orders from the blotter, then clear the list.
@@ -146,6 +150,9 @@ class AlgorithmSimulator(object):
             if new_orders:
                 for new_order in new_orders:
                     perf_tracker.process_order(new_order)
+
+            if self.instant_fill:
+                ingest_orders(blotter, current_data, perf_tracker)
 
             algo.portfolio_needs_update = True
             algo.account_needs_update = True
